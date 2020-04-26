@@ -8,8 +8,10 @@ import yaml
 from easydict import EasyDict
 import shutil
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 
@@ -28,14 +30,13 @@ class AverageMeter(object):
 
 def adjust_learning_rate(initial_lr, optimizer, epoch, n_repeats):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = initial_lr * (0.1 ** (epoch // int(math.ceil(30./n_repeats))))
+    lr = initial_lr * (0.1 ** (epoch // int(math.ceil(30. / n_repeats))))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
 
 def fgsm(gradz, step_size):
-    return step_size*torch.sign(gradz)
-
+    return step_size * torch.sign(gradz)
 
 
 def accuracy(output, target, topk=(1,)):
@@ -60,34 +61,37 @@ def initiate_logger(output_path):
         os.makedirs(os.path.join('output', output_path))
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
-    logger.addHandler(logging.FileHandler(os.path.join('output', output_path, 'log.txt'),'w'))
+    logger.addHandler(logging.FileHandler(os.path.join('output', output_path, 'log.txt'), 'w'))
     logger.info(pad_str(' LOGISTICS '))
     logger.info('Experiment Date: {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M')))
     logger.info('Output Name: {}'.format(output_path))
     logger.info('User: {}'.format(os.getenv('USER')))
     return logger
 
+
 def get_model_names():
-	return sorted(name for name in models.__dict__
-    		if name.islower() and not name.startswith("__")
-    		and callable(models.__dict__[name]))
+    return sorted(name for name in models.__dict__
+                  if name.islower() and not name.startswith("__")
+                  and callable(models.__dict__[name]))
+
 
 def pad_str(msg, total_len=70):
     rem_len = total_len - len(msg)
-    return '*'*int(rem_len/2) + msg + '*'*int(rem_len/2)\
+    return '*' * int(rem_len / 2) + msg + '*' * int(rem_len / 2)
+
 
 def parse_config_file(args):
     with open(args.config) as f:
-        config = EasyDict(yaml.load(f))
-        
+        config = EasyDict(yaml.load(f, Loader=yaml.FullLoader))
+
     # Add args parameters to the dict
     for k, v in vars(args).items():
         config[k] = v
-        
+
     # Add the output path
     config.output_name = '{:s}_step{:d}_eps{:d}_repeat{:d}'.format(args.output_prefix,
-                         int(config.ADV.fgsm_step), int(config.ADV.clip_eps), 
-                         config.ADV.n_repeats)
+                                                                   int(config.ADV.fgsm_step), int(config.ADV.clip_eps),
+                                                                   config.ADV.n_repeats)
     return config
 
 
